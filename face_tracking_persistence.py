@@ -1,3 +1,6 @@
+## Experimenting with saving face_recognition face data with pickle
+## Based on some experimenting with mtcnn and retinaface models, these methods may be preferred for general face detection
+
 import face_recognition
 import os
 import cv2
@@ -6,13 +9,12 @@ import time
 
 KNOWN_FACES = "known_faces"
 UNKNOWN_FACES = "unknown_faces"
-TOLERANCE = 0.65
+TOLERANCE = 0.5
 FRAME_THICCNESS = 3
 FONT_THICCNESS = 2
 MODEL = 'cnn' 
 
 video = cv2.VideoCapture('Data/Video/Video0.mp4')
-#video = cv2.VideoCapture(0)
 print(video.isOpened())
 
 known_faces = []
@@ -30,13 +32,12 @@ if len(known_names) > 0:
 else:
     next_id = 0
 
-
 while True:
     ret, image = video.read()
     image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     locations = face_recognition.face_locations(image, number_of_times_to_upsample=0,  model='hog')
     encodings = face_recognition.face_encodings(image, locations)
-    
+
     for face_encoding, face_location in zip(encodings, locations):
         results = face_recognition.compare_faces(known_faces, face_encoding, TOLERANCE)
         match = None
@@ -58,8 +59,8 @@ while True:
         bottom_right = (face_location[1], face_location[2]+22)
         cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
         cv2.putText(image, str(match), (face_location[3]+10, face_location[2]+15), cv2.FONT_HERSHEY_COMPLEX, 0.5, (200,200,200))
-    #     print('aa')
 
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     cv2.imshow('x', image)
     if cv2.waitKey(1) & 0xFF ==ord('e'):
         break
