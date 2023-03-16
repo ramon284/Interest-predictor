@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 class face_persistence_model:
-    def __init__(self, TOLERANCE, filename, frameSkips = 3, model='cnn', modelSize='large'):
+    def __init__(self, TOLERANCE, filename, model='cnn', modelSize='large'):
         self.KNOWN_FACES = "./known_faces"
         self.UNKNOWN_FACES = "./unknown_faces"
         self.TOLERANCE = TOLERANCE ## <- most important hyperparameter. Lower means it more quickly recognizes a "new" face
@@ -21,7 +21,6 @@ class face_persistence_model:
         self.filename = filename
         self.fileDir = self.KNOWN_FACES + '/' + self.filename[:-4]
         self.video = cv2.VideoCapture('./Data/Video/'+filename)
-        self.frameSkips = frameSkips
         #video = cv2.VideoCapture('Data/Video/Video0_Trim.mp4')
         print('Video loaded? : ', self.video.isOpened())
         self.faceData = []
@@ -53,9 +52,6 @@ class face_persistence_model:
     def runDetection(self):
         while True:
             ret, image = self.video.read()
-            if self.frame_i % self.frameSkips == 0:
-                self.frame_i += 1
-                continue
             if ret == False:
                 break
             image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
