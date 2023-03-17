@@ -1,5 +1,4 @@
 import cv2
-
 class frameCutter:
     def __init__(self, fileName, framesToSkip=5):
         self.fileName = fileName
