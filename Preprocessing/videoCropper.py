@@ -33,7 +33,7 @@ class videoCropper:
     def createCroppedVideo(self):
     # Create a VideoWriter to save the cropped video
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # You can use other codecs, like 'XVID' for .avi files
-        output_video = 'cropped_'+self.videoFileName
+        output_video = './Data/Video/cropped_'+self.videoFileName
         out = cv2.VideoWriter(output_video, fourcc, self.fps, (self.width, self.height))
 
         while self.cap.isOpened():
@@ -57,10 +57,10 @@ class videoCropper:
         self.df['FaceRectX'] = self.df['FaceRectX'] - self.left
         self.df['FaceRectY'] = self.df['FaceRectY'] - self.top
 
-    def saveNewCsv(self):
-        self.df.to_csv('updated_dataframe.csv', index=False)
+    def saveNewCsv(self, csvName='updated_dataframe'):
+        self.df.to_csv(csvName+'.csv', index=False)
     
-    def runModel(self):
+    def runModel(self, csvName='updated_dataframe'):
         self.openVideo()
         self.readDataFrame()
         self.getVideoProperties()
