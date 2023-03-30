@@ -4,6 +4,7 @@ from feat import Detector
 import pandas as pd
 import os
 import cv2
+from feat.utils.image_operations import convert_image_to_tensor
 
 class AuEmoDetectors():
     def __init__(self, filename, df, emoModel='svm', device='cuda'):
@@ -14,7 +15,6 @@ class AuEmoDetectors():
         print('Video loaded? : ', self.video.isOpened())
         self.x_columns = [f'x{i}' for i in range(68)]
         self.y_columns = [f'y{i}' for i in range(68)]
-        self.face_columns = ['FaceRectWidth', 'FaceRectHeight']
         self.bbox_columns = ['FaceRectX', 'FaceRectWidth', 'FaceRectY', 'FaceRectHeight']
         self.au_keys =      ["AU1","AU2","AU4","AU5","AU6","AU7","AU9","AU10","AU11","AU12","AU14",
                              "AU15","AU17","AU20","AU23","AU24","AU25","AU26","AU28","AU43"]
@@ -22,7 +22,6 @@ class AuEmoDetectors():
         self.auDF = pd.DataFrame(index=range(len(df)), columns=self.au_keys)
         self.emoDF = pd.DataFrame(index=range(len(df)), columns=self.emotion_keys)
         self.detectorModel = Detector(emotion_model=emoModel, device=device)
-        self.tempdf = ''
         
 
     def detectFeatures(self):
@@ -32,7 +31,7 @@ class AuEmoDetectors():
             ret, image = self.video.read()
             if ret == False:
                 break
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            ##image = convert_image_to_tensor(image,img_type="float32")
             grouped = self.df.groupby('Frame')
             for frame, group in grouped:
                 if frame == frame_i:
@@ -49,6 +48,12 @@ class AuEmoDetectors():
                     emotions = self.detectorModel.detect_emotions(frame=image, facebox=['a','b'], landmarks=nested_coordinates)
                 else:
                     faceInfo = row[self.bbox_columns].tolist()
+                    left, width, top, height = faceInfo
+                    right = left + width
+                    bottom = top + height
+                    faceInfo = [left, top, right, bottom]
+                    ## 385.0 130.0 427.0 156.0
+                    ##['FaceRectX', 'FaceRectWidth', 'FaceRectY', 'FaceRectHeight']
                     faceInfo.append(1)
                     faceInfo = [int(x) for x in faceInfo]
                     faceInfo = [[faceInfo]]
@@ -58,10 +63,11 @@ class AuEmoDetectors():
                 for name, key in zip(self.emotion_keys, emotions[0][0]):
                     self.emoDF.loc[total_iterator, name] = key
                 total_iterator += 1
+            frame_i += 1
     
         self.tempdf = self.df.copy(deep=True)
         self.tempdf = pd.concat([self.tempdf, self.auDF, self.emoDF], axis=1)
-        self.tempdf.to_csv('final_with_emo.csv', index=False)
+        self.tempdf.to_csv(f'final_{self.filename}.csv', index=False)
 
     def runModel(self):
         self.detectFeatures()

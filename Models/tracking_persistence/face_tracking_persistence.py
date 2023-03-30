@@ -8,6 +8,7 @@ import pickle
 import time
 import numpy as np
 import pandas as pd
+from feat import Detector
 
 class face_persistence_model:
     def __init__(self, TOLERANCE, filename, model='cnn', modelSize='large'):
@@ -40,6 +41,7 @@ class face_persistence_model:
             "top_lip": list(range(48, 55)) + [64, 63, 62, 61, 60],
             "bottom_lip": list(range(54, 60)) + [48, 60, 67, 66, 65, 64]
         }
+        self.myDetector = Detector()
         self.initDirectory()
         
     def initDirectory(self):    
@@ -69,16 +71,29 @@ class face_persistence_model:
             ret, image = self.video.read()
             if ret == False:
                 break
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            
+            #image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) / 255
             frame_rows = someDF[someDF['Frame'] == self.frame_i]
             locations = [(int(row['FaceRectY']), int(row['FaceRectX'] + row['FaceRectWidth']), 
                           int(row['FaceRectHeight'] + row['FaceRectY']), int(row['FaceRectX'])) for _, row in frame_rows.iterrows()]
+            locationsPyFeat = [(int(row['FaceRectX']), int(row['FaceRectY']), 
+                          int(row['FaceRectX'] + row['FaceRectWidth']), int(row['FaceRectY'] + row['FaceRectHeight'])) for _, row in frame_rows.iterrows()]
+            locationsPyFeatList = []
+            for feats in locationsPyFeat:
+                temp = [xyz for xyz in feats]
+                temp.append(1)
+                locationsPyFeatList.append(temp)
+            locationsPyFeatList = [locationsPyFeatList]
+            landmarks = self.myDetector.detect_landmarks(image, locationsPyFeatList)
+            
             ## top, right, bottom, left
             encodings = face_recognition.face_encodings(image, locations, model=self.modelSize)
-            landmarks = face_recognition.face_landmarks(image, locations, model=self.modelSize)
-            for face_encoding, face_location, face_landmark in zip(encodings, locations, landmarks):
-                top, right, bottom, left = face_location
+            #landmarks = face_recognition.face_landmarks(image, locations, model=self.modelSize)
+            #return mylandmarks
+            
+            ## todo: remove locations list, replace with locationsPyFeat
+            for face_encoding, face_location, face_landmark in zip(encodings, locationsPyFeat, landmarks[0]):
+                #top, right, bottom, left = face_location
+                left, top, right, bottom = face_location 
                 results = face_recognition.compare_faces(self.known_faces, face_encoding, self.TOLERANCE)
                 match = None
                 if True in results:
@@ -93,22 +108,29 @@ class face_persistence_model:
 
                 ## This is for visualizing the bounding boxes in real-time, with annotations
                 if display == True:
-                    top_left = (face_location[3], face_location[0])
-                    bottom_right = (face_location[1], face_location[2])
+                    top_left = (left, top)
+                    bottom_right = (right, bottom)
                     color = [255, 255, 0]
                     cv2.rectangle(image, top_left, bottom_right, color, self.FRAME_THICCNESS)
-                    top_left = (face_location[3], face_location[2])
-                    bottom_right = (face_location[1], face_location[2]+22)
+                    top_left = (left, bottom)
+                    bottom_right = (right, bottom+22)
                     cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
-                    cv2.putText(image, str(match), (face_location[3]+10, face_location[2]+15), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,0,0))
+                    cv2.putText(image, str(match), (left+10, bottom+15), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,0,0))
                 
                 loc = someDF.loc[(someDF['Frame'] == self.frame_i) & (someDF['FaceRectY'] == top) & (someDF['FaceRectX'] == left)].index[0]
                 someDF.loc[loc, 'Person'] = str(match)
+                
                 temp_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
-                for landmark, indices in self.landmark_dict.items():
-                    for index, (x,y) in zip(indices, face_landmark[landmark]):
-                        temp_df.at[0, f'x{index}'] = x
-                        temp_df.at[0, f'y{index}'] = y
+                
+                for j, coords in enumerate(face_landmark):
+                    cordX, cordY = coords
+                    temp_df.at[0, f'x{j}'] = cordX
+                    temp_df.at[0, f'y{j}'] = cordY
+                        
+                # for landmark, indices in self.landmark_dict.items():
+                #     for index, (x,y) in zip(indices, face_landmark[landmark]):
+                #         temp_df.at[0, f'x{index}'] = x
+                #         temp_df.at[0, f'y{index}'] = y
                 cols_to_update = temp_df.columns.intersection(someDF.columns)
                 # Update only the required columns
                 someDF.loc[loc, cols_to_update] = temp_df.loc[0, cols_to_update]
@@ -188,7 +210,6 @@ class face_persistence_model:
                 coordinates = list(zip(x_array, y_array))
                 coordinates = np.array(coordinates, dtype=np.float32)
                 nested_coordinates = [[coordinates]]
-                print(nested_coordinates)
                 aus = self.detectorModel.detect_aus(image, nested_coordinates)
                 if self.emoModel == 'svm':
                     emotions = self.detectorModel.detect_emotions(frame=image, facebox=['a','b'], landmarks=nested_coordinates)
