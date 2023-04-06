@@ -29,12 +29,14 @@ class videoCropper:
         self.bottom = min(frame_height, self.bottom)
         self.width = int(self.right - self.left)
         self.height = int(self.bottom - self.top)
+        print(f'right:{self.right} and left:{self.left}')
 
     def createCroppedVideo(self):
     # Create a VideoWriter to save the cropped video
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # You can use other codecs, like 'XVID' for .avi files
         output_video = './Data/Video/cropped_'+self.videoFileName
         out = cv2.VideoWriter(output_video, fourcc, self.fps, (self.width, self.height))
+        print(self.top, self.bottom, self.height, self.width)
 
         while self.cap.isOpened():
             ret, frame = self.cap.read()

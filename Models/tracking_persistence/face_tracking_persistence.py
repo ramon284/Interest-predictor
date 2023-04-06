@@ -88,9 +88,7 @@ class face_persistence_model:
             ## top, right, bottom, left
             encodings = face_recognition.face_encodings(image, locations, model=self.modelSize)
             #landmarks = face_recognition.face_landmarks(image, locations, model=self.modelSize)
-            #return mylandmarks
             
-            ## todo: remove locations list, replace with locationsPyFeat
             for face_encoding, face_location, face_landmark in zip(encodings, locationsPyFeat, landmarks[0]):
                 #top, right, bottom, left = face_location
                 left, top, right, bottom = face_location 
@@ -127,10 +125,6 @@ class face_persistence_model:
                     temp_df.at[0, f'x{j}'] = cordX
                     temp_df.at[0, f'y{j}'] = cordY
                         
-                # for landmark, indices in self.landmark_dict.items():
-                #     for index, (x,y) in zip(indices, face_landmark[landmark]):
-                #         temp_df.at[0, f'x{index}'] = x
-                #         temp_df.at[0, f'y{index}'] = y
                 cols_to_update = temp_df.columns.intersection(someDF.columns)
                 # Update only the required columns
                 someDF.loc[loc, cols_to_update] = temp_df.loc[0, cols_to_update]
@@ -152,6 +146,61 @@ class face_persistence_model:
         else:
             self.faceData.to_csv('facial_persistence_test_'+self.filename+'.csv', index=False)
             
+            
+    def runModel_single_person(self, someDF, display=False):
+        someDF['Person'] = pd.Series([None] * len(someDF.index))
+        empty_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
+        someDF = pd.concat([someDF, empty_df], axis=1)
+        total_iterator = 0
+        while True:
+            ret, image = self.video.read()
+            if ret == False:
+                break
+            
+            frame_row = someDF[someDF['Frame'] == self.frame_i].iloc[0]
+            location = (int(frame_row['FaceRectY']), int(frame_row['FaceRectX'] + frame_row['FaceRectWidth']), 
+                        int(frame_row['FaceRectHeight'] + frame_row['FaceRectY']), int(frame_row['FaceRectX']))
+            locationPyFeat = (int(frame_row['FaceRectX']), int(frame_row['FaceRectY']), 
+                        int(frame_row['FaceRectX'] + frame_row['FaceRectWidth']), int(frame_row['FaceRectY'] + frame_row['FaceRectHeight']))
+            locationsPyFeatList = [feats for feats in locationPyFeat]
+            locationsPyFeatList.append(1)
+            landmarks = self.myDetector.detect_landmarks(image, [[locationsPyFeatList]])
+            
+            match = 1
+            loc = someDF.loc[(someDF['Frame'] == self.frame_i) & (someDF['FaceRectY'] == location[0]) & (someDF['FaceRectX'] == location[3])].index[0]
+            someDF.loc[loc, 'Person'] = match
+            
+            temp_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
+            
+            for j, coords in enumerate(landmarks[0][0]):
+                cordX, cordY = coords
+                temp_df.at[0, f'x{j}'] = cordX
+                temp_df.at[0, f'y{j}'] = cordY
+                    
+            cols_to_update = temp_df.columns.intersection(someDF.columns)
+            # Update only the required columns
+            someDF.loc[loc, cols_to_update] = temp_df.loc[0, cols_to_update]
+
+            if display:
+                left, top, right, bottom = location
+                top_left = (left, top)
+                bottom_right = (right, bottom)
+                color = [255, 255, 0]
+                cv2.rectangle(image, top_left, bottom_right, color, self.FRAME_THICCNESS)
+                top_left = (left, bottom)
+                bottom_right = (right, bottom+22)
+                cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
+                cv2.putText(image, str(match), (left+10, bottom+15), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,0,0))
+                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                cv2.imshow('x', image)
+                if cv2.waitKey(1) & 0xFF ==ord('e'):
+                    break
+            self.frame_i += 1
+                
+        self.video.release()
+        if display:
+            cv2.destroyAllWindows()
+        return someDF         
             
     def WORKINPROGRESS(self, someDF, display=False):
         someDF['Person'] = pd.Series([None] * len(someDF.index))
