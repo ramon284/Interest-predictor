@@ -5,7 +5,6 @@ from feat.facepose_detectors.img2pose.img2pose_test import Img2Pose
 from torchvision import transforms
 from feat.utils.image_operations import convert_image_to_tensor
 import torch
-import time
 from concurrent.futures import ThreadPoolExecutor
 
 
@@ -61,8 +60,7 @@ class face_detector:
         return self.faceData
     
     
-    def runModelBatch(self):
-        start_time = 1
+    def runModelBatch(self, batch=True):
         frame_i = 0
         batch_frames = []
         with ThreadPoolExecutor(max_workers=4) as executor:
@@ -73,12 +71,10 @@ class face_detector:
                     frame_i += 1
                 if len(batch_frames) == self.batch_size or not ret:
                     if len(batch_frames) > 0:
-                        print(start_time - time.time())
-                        start_time = time.time() # start the timer
                         
                         batch_frames_processed = list(executor.map(self.parallel_preprocess, batch_frames))
                         batch_imgs = [img for _, img in batch_frames_processed]
-                        preds = self.model(batch_imgs)
+                        preds = self.model(batch_imgs, batch=batch)
                         
                         #batch_imgs = [img.to(self.device) for _, img in batch_frames]
                         #batch_imgs = [img for _, img in batch_frames]
@@ -116,8 +112,7 @@ class face_detector:
         return self.faceData
     
     
-    def runModelBatchSingleFace(self):
-        start_time = 1
+    def runModelBatchSingleFace(self, batch=True):
         frame_i = 0
         prev_bbox = None
         batch_frames = []
@@ -129,12 +124,10 @@ class face_detector:
                     frame_i += 1
                 if len(batch_frames) == self.batch_size or not ret:
                     if len(batch_frames) > 0:
-                        print(start_time - time.time())
-                        start_time = time.time() # start the timer
                         
                         batch_frames_processed = list(executor.map(self.parallel_preprocess, batch_frames))
                         batch_imgs = [img for _, img in batch_frames_processed]
-                        preds = self.model(batch_imgs)
+                        preds = self.model(batch_imgs, batch=batch)
                         
                         #batch_imgs = [img.to(self.device) for _, img in batch_frames]
                         #batch_imgs = [img for _, img in batch_frames]
