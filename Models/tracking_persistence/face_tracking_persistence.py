@@ -207,7 +207,7 @@ class face_persistence_model:
         return someDF         
             
     def runDetectionTrackOnlyBatch(self, someDF, display=False, batch_size=16):
-        someDF['Person'] = pd.Series([None] * len(someDF.index))
+        #someDF['Person'] = pd.Series([None] * len(someDF.index))
         empty_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
         someDF = pd.concat([someDF, empty_df], axis=1)
         frame_i = 0
@@ -220,7 +220,7 @@ class face_persistence_model:
             ret, image = self.video.read()
             if not ret:
                 break
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) / 255
             image = convert_image_to_tensor(image, img_type="float32")[0]
             frame_rows = someDF[someDF['Frame'] == self.frame_i]
 

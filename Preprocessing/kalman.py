@@ -12,8 +12,9 @@ class filterKalman:
 
     def runFilter(self):
         for person in self.df['Person'].unique():
-            print('person: ',person)
-            temp_df = self.df[self.df['Person'] == person].copy()
+            print('person: ', person)
+            person_indices = self.df[self.df['Person'] == person].index
+
             initial_state_mean = np.zeros(self.n_dim_state)
             initial_state_covariance = np.eye(self.n_dim_state) * 1e4
 
@@ -32,13 +33,16 @@ class filterKalman:
                 observation_covariance=observation_covariance,
             )
 
-            observations = temp_df[self.landmark_columns].values
+            observations = self.df.loc[person_indices, self.landmark_columns].values
 
             # Apply the Kalman filter
             filtered_state_means, filtered_state_covariances = kf.filter(observations)
 
-            temp_df[self.landmark_columns] = filtered_state_means
-            self.df.update(temp_df)
+            # Round and convert filtered_state_means to integers
+            filtered_state_means = np.round(filtered_state_means).astype(int)
+
+            # Update the DataFrame in-place
+            self.df.loc[person_indices, self.landmark_columns] = filtered_state_means
 
         self.df.to_csv('kalmanned.csv', index=False)
         return self.df

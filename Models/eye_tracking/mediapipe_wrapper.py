@@ -47,9 +47,9 @@ class mediaPipeModel:
         total_distance = self.euclidian_distance(right_point, left_point)
         ratio = center_to_right_distance/total_distance
         iris_position = ''
-        if ratio <= 0.42:
+        if ratio <= 0.45:
             iris_position = 'right'
-        elif ratio >= 0.42 and ratio <= 0.57:
+        elif ratio >= 0.45 and ratio <= 0.54:
             iris_position = 'center'
         else:
             iris_position = 'left'
@@ -134,6 +134,7 @@ class mediaPipeModel:
                     # Wait for 1/fps seconds before displaying the next frame
                     else:
                         frame_i += 1   
-        self.saveCSV()
+        return self.df
+        #self.saveCSV()
                     
                                   
