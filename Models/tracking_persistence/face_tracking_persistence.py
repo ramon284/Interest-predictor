@@ -249,8 +249,10 @@ class face_persistence_model:
                         # Update landmark coordinates
                         for j, coords in enumerate(face_landmark):
                             cordX, cordY = coords
-                            someDF.at[loc, f'x{j}'] = cordX
-                            someDF.at[loc, f'y{j}'] = cordY
+                            someDF.at[loc, f'x{j}'] = int(cordX)
+                            someDF.at[loc, f'y{j}'] = int(cordY)
+                            # someDF.at[loc, f'x{j}'] = cordX
+                            # someDF.at[loc, f'y{j}'] = cordY
 
                 frames = []
                 locations_batches = []

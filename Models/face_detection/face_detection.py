@@ -100,11 +100,18 @@ class face_detector:
                                     if(left < 0 or right > self.frame_width or top < 0 or bottom > self.frame_height):
                                         continue
                                     self.faceData = pd.concat([self.faceData, 
-                                                pd.DataFrame({'Frame': frame_num,  'FaceRectX': left, 'FaceRectY': top, 
-                                                            'FaceRectWidth': right - left, 'FaceRectHeight': bottom - top,
-                                                            'Pitch': Pitch, 'Roll': Roll, 'Yaw': Yaw}, 
+                                                pd.DataFrame({'Frame': frame_num,  'FaceRectX': int(left), 'FaceRectY': int(top), 
+                                                            'FaceRectWidth': int(right - left), 'FaceRectHeight': int(bottom - top),
+                                                            'Pitch': round(Pitch, 3), 'Roll': round(Roll, 3), 'Yaw': round(Yaw, 3)}, 
                                                             index=[0])], 
                                                 ignore_index=True)
+                                    ## might make it smaller.
+                                    # self.faceData = pd.concat([self.faceData, 
+                                    #             pd.DataFrame({'Frame': frame_num,  'FaceRectX': left, 'FaceRectY': top, 
+                                    #                         'FaceRectWidth': right - left, 'FaceRectHeight': bottom - top,
+                                    #                         'Pitch': Pitch, 'Roll': Roll, 'Yaw': Yaw}, 
+                                    #                         index=[0])], 
+                                    #             ignore_index=True)
                     batch_frames = []
                 if not ret:
                     break

@@ -40,6 +40,7 @@ class filterKalman:
 
             # Round and convert filtered_state_means to integers
             filtered_state_means = np.round(filtered_state_means).astype(int)
+            
 
             # Update the DataFrame in-place
             self.df.loc[person_indices, self.landmark_columns] = filtered_state_means
