@@ -220,7 +220,8 @@ class face_persistence_model:
             ret, image = self.video.read()
             if not ret:
                 break
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) / 255
+            #image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) / 255
+            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             image = convert_image_to_tensor(image, img_type="float32")[0]
             frame_rows = someDF[someDF['Frame'] == self.frame_i]
 
@@ -249,8 +250,8 @@ class face_persistence_model:
                         # Update landmark coordinates
                         for j, coords in enumerate(face_landmark):
                             cordX, cordY = coords
-                            someDF.at[loc, f'x{j}'] = int(cordX)
-                            someDF.at[loc, f'y{j}'] = int(cordY)
+                            someDF.at[loc, f'x{j}'] = round(cordX,1)
+                            someDF.at[loc, f'y{j}'] = round(cordY,1)
                             # someDF.at[loc, f'x{j}'] = cordX
                             # someDF.at[loc, f'y{j}'] = cordY
 

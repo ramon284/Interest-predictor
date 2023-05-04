@@ -21,6 +21,7 @@ class videoCropper:
         print(f'input_bitrate: {self.input_bitrate}')
         print(f'video_duration: {video_duration}')
         print(f'input_video_size: {input_video_size}')
+        print(f'framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
                 
         
     def readDataFrame(self):

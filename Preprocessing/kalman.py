@@ -39,9 +39,8 @@ class filterKalman:
             filtered_state_means, filtered_state_covariances = kf.filter(observations)
 
             # Round and convert filtered_state_means to integers
-            filtered_state_means = np.round(filtered_state_means).astype(int)
+            filtered_state_means = np.round(filtered_state_means, 1)
             
-
             # Update the DataFrame in-place
             self.df.loc[person_indices, self.landmark_columns] = filtered_state_means
 

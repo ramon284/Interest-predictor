@@ -35,6 +35,7 @@ class mediaPipeModel:
         ## self.mp_drawing = mp.solutions.drawing_utils
         
         
+        
     def euclidian_distance(self, p1, p2):
         x1, y1 = p1.ravel()
         x2, y2 = p2.ravel()
@@ -45,14 +46,19 @@ class mediaPipeModel:
         center_to_right_distance = self.euclidian_distance(iris_center, right_point)
         #center_to_left_distance = euclidian_distance(iris_center, left_point)
         total_distance = self.euclidian_distance(right_point, left_point)
-        ratio = center_to_right_distance/total_distance
+        if total_distance == 0:
+            ratio = 5
+        else:
+            ratio = center_to_right_distance/total_distance
         iris_position = ''
         if ratio <= 0.45:
             iris_position = 'right'
         elif ratio >= 0.45 and ratio <= 0.54:
             iris_position = 'center'
+            
         else:
             iris_position = 'left'
+            if ratio == 5: iris_position = 'x'
         return iris_position, ratio
     
     def loadVideo(self):
@@ -93,7 +99,6 @@ class mediaPipeModel:
                     face_frame = image[top:bottom, left:right] ## this is the bounding box of a face
                     img_h, img_w = face_frame.shape[:2]
                     results = self.face_mesh.process(face_frame)
-                    
                     if results.multi_face_landmarks:
                         mesh_points=np.array([np.multiply([p.x, p.y], [img_w, img_h]).astype(int) for p in results.multi_face_landmarks[0].landmark])
 

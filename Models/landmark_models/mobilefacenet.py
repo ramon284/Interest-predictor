@@ -32,9 +32,6 @@ class landmarkDetector():
             if len(image_batch) == 0:
                 break
 
-            
-
-
             frame_range = range(current_batch, current_batch + batch_size)
             filtered_df = self.df[self.df['Frame'].isin(frame_range)]
 
@@ -48,15 +45,11 @@ class landmarkDetector():
 
             nested_list = self.df.loc[frame_range, ['FaceRectX', 'FaceRectY', 'FaceRectWidth', 'FaceRectHeight']].apply(lambda x: x.values.tolist(), axis=1).tolist()
             bounding_boxes_batch = [[(x, y, x+w, y+h) for x, y, w, h in (bboxes if isinstance(bboxes[0], list) else [bboxes])] for bboxes in nested_list]
-            print(bounding_boxes_batch)
             ## the rest of face detectors, mainly ``list[(x1,y1,x2,y2),...]``.
 
             image_batch = torch.stack(image_batch).to('cuda')
             ####detected_faces_batch = self.model.face_detector.detect_from_batch(image_batch)
             landmarks_batch = self.model.get_landmarks_from_batch(image_batch, detected_faces=bounding_boxes_batch)
-            
-            print(landmarks_batch[0])
-
 
             # Process the results
             for frame, landmarks_list in zip(frame_range, landmarks_batch):
@@ -65,7 +58,6 @@ class landmarkDetector():
                         landmark_data = {}
                         for i, point in enumerate(landmarks):
                             x, y = point
-                            print(x,y)
                             landmark_data[f'x{i}'] = x
                             landmark_data[f'y{i}'] = y
 
@@ -76,5 +68,4 @@ class landmarkDetector():
                         result_df = result_df.append(row, ignore_index=True)
 
             current_batch += batch_size
-            print('batch finished')
             torch.cuda.empty_cache()
