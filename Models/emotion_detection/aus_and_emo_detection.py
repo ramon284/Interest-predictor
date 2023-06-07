@@ -145,9 +145,6 @@ class AuEmoDetectors():
             batch_images = []
             final_faceBoxList = []
             batch_landmarks = []
-            # now = datetime.now()
-            # current_time = now.strftime("%H:%M:%S")
-            # print("Current Time =", current_time)
             for _ in range(batch_size):
                 ret, image = self.video.read()
                 if ret == False:
@@ -158,32 +155,9 @@ class AuEmoDetectors():
                     frame_group = grouped.get_group(frame_i)
                 except KeyError:
                     frame_group = pd.DataFrame()
-                
-                # grouped = self.df.groupby('Frame')
-                # for frame, group in grouped:
-                #     if frame == frame_i:
-                #         frame_group = group
-                #         break
-                    
+     
                 nested_coordinates = []
                 faceBoxList = []
-                
-                # for _, row in frame_group.iterrows():
-                #     faceInfo = row[self.bbox_columns].tolist()
-                #     left, width, top, height = faceInfo
-                #     right = left + width
-                #     bottom = top + height
-                #     faceInfo = [left, top, right, bottom]
-                #     faceInfo.append(1)
-                #     faceInfo = [float(x) for x in faceInfo]
-                #     faceBoxList.append(faceInfo)
-                    
-                #     x_array = row[self.x_columns].tolist()
-                #     y_array = row[self.y_columns].tolist()
-                #     coordinates = list(zip(x_array, y_array))
-                #     coordinates = np.array(coordinates, dtype=np.float32)
-                #     coordinates = [coordinates]
-                #     nested_coordinates.append(coordinates[0])
                                 
                 faceInfo_array = frame_group[self.bbox_columns].values
                 right_bottom = faceInfo_array[:, [0, 2]] + faceInfo_array[:, [1, 3]]
