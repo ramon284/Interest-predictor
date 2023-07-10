@@ -11,8 +11,6 @@ class eyePreprocessor:
         mean_EAR = df.groupby('Person')['EAR'].mean()
         mean_EAR_df = mean_EAR.reset_index().rename(columns={'EAR': 'mean_EAR'})
         df = df.merge(mean_EAR_df, on='Person')
-
-        
         return df
     
     def pupilFeatures(self, df):

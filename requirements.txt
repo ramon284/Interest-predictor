@@ -1,0 +1,5 @@
+numpy==1.22.4
+pandas==1.4.4
+torch==2.1.0
+xgboost==1.7.1
+git+https://github.com/ramon284/py-feat-modified.git#egg=py-feat

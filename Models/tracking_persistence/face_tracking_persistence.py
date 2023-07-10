@@ -1,7 +1,3 @@
-## Experimenting with saving face_recognition face data with pickle
-## Based on some experimenting with mtcnn and retinaface models, these methods may be preferred for general face detection
-
-import face_recognition
 import os
 import cv2
 import pickle
@@ -63,86 +59,6 @@ class face_persistence_model:
             self.next_id = max(self.known_names) + 1
         else:
             self.next_id = 0
-
-    
-    def runDetectionTrackOnly(self, someDF, display=False):
-        someDF['Person'] = pd.Series([None] * len(someDF.index))
-        empty_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
-        someDF = pd.concat([someDF, empty_df], axis=1)
-        frame_i = 0
-        total_iterator = 0
-        while True:
-            ret, image = self.video.read()
-            if ret == False:
-                break
-            #image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR) / 255
-            frame_rows = someDF[someDF['Frame'] == self.frame_i]
-            locations = [(int(row['FaceRectY']), int(row['FaceRectX'] + row['FaceRectWidth']), 
-                          int(row['FaceRectHeight'] + row['FaceRectY']), int(row['FaceRectX'])) for _, row in frame_rows.iterrows()]
-            locationsPyFeat = [(int(row['FaceRectX']), int(row['FaceRectY']), 
-                          int(row['FaceRectX'] + row['FaceRectWidth']), int(row['FaceRectY'] + row['FaceRectHeight'])) for _, row in frame_rows.iterrows()]
-            locationsPyFeatList = []
-            for feats in locationsPyFeat:
-                temp = [xyz for xyz in feats]
-                temp.append(1)
-                locationsPyFeatList.append(temp)
-            locationsPyFeatList = [locationsPyFeatList]
-            landmarks = self.myDetector.detect_landmarks(image, locationsPyFeatList)
-            
-            ## top, right, bottom, left
-            encodings = face_recognition.face_encodings(image, locations, model=self.modelSize)
-            #landmarks = face_recognition.face_landmarks(image, locations, model=self.modelSize)
-            
-            for face_encoding, face_location, face_landmark in zip(encodings, locationsPyFeat, landmarks[0]):
-                #top, right, bottom, left = face_location
-                left, top, right, bottom = face_location 
-                results = face_recognition.compare_faces(self.known_faces, face_encoding, self.TOLERANCE)
-                match = None
-                if True in results:
-                    match = self.known_names[results.index(True)]
-                else:
-                    match = str(self.next_id)
-                    self.next_id += 1
-                    self.known_names.append(match)
-                    self.known_faces.append(face_encoding)
-                    os.mkdir(f"{self.fileDir}\{match}")
-                    pickle.dump(face_encoding, open(f"{self.fileDir}\{match}\{match}-{int(time.time())}.pkl", 'wb'))
-
-                ## This is for visualizing the bounding boxes in real-time, with annotations
-                if display == True:
-                    top_left = (left, top)
-                    bottom_right = (right, bottom)
-                    color = [255, 255, 0]
-                    cv2.rectangle(image, top_left, bottom_right, color, self.FRAME_THICCNESS)
-                    top_left = (left, bottom)
-                    bottom_right = (right, bottom+22)
-                    cv2.rectangle(image, top_left, bottom_right, color, cv2.FILLED)
-                    cv2.putText(image, str(match), (left+10, bottom+15), cv2.FONT_HERSHEY_COMPLEX, 0.7, (0,0,0))
-                
-                loc = someDF.loc[(someDF['Frame'] == self.frame_i) & (someDF['FaceRectY'] == top) & (someDF['FaceRectX'] == left)].index[0]
-                someDF.loc[loc, 'Person'] = str(match)
-                
-                temp_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
-                
-                for j, coords in enumerate(face_landmark):
-                    cordX, cordY = coords
-                    temp_df.at[0, f'x{j}'] = cordX
-                    temp_df.at[0, f'y{j}'] = cordY
-                        
-                cols_to_update = temp_df.columns.intersection(someDF.columns)
-                # Update only the required columns
-                someDF.loc[loc, cols_to_update] = temp_df.loc[0, cols_to_update]
-                
-            if display == True:
-                image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-                cv2.imshow('x', image)
-                if cv2.waitKey(1) & 0xFF ==ord('e'):
-                    break
-            self.frame_i += 1
-            
-        self.video.release()
-        cv2.destroyAllWindows()
-        return someDF
     
     def saveCSV(self, input=''):
         if isinstance(input, pd.DataFrame):
@@ -274,56 +190,5 @@ class face_persistence_model:
                         cordX, cordY = coords
                         someDF.at[loc, f'x{j}'] = cordX
                         someDF.at[loc, f'y{j}'] = cordY
-        self.video.release()
-        return someDF
-    
-    def testFunction(self, someDF, display=False, batch_size=8):
-        someDF['Person'] = pd.Series([None] * len(someDF.index))
-        empty_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
-        someDF = pd.concat([someDF, empty_df], axis=1)
-        frame_i = 0
-        total_iterator = 0
-        while True:
-            ret, image = self.video.read()
-            if ret == False:
-                break
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-            frame_rows = someDF[someDF['Frame'] == self.frame_i]
-            locationsPyFeat = [(int(row['FaceRectX']), int(row['FaceRectY']), 
-                          int(row['FaceRectX'] + row['FaceRectWidth']), int(row['FaceRectY'] + row['FaceRectHeight'])) for _, row in frame_rows.iterrows()]
-            locationsPyFeatList = []
-            for feats in locationsPyFeat:
-                temp = [xyz for xyz in feats]
-                temp.append(1)
-                locationsPyFeatList.append(temp)
-            locationsPyFeatList = [locationsPyFeatList]
-            landmarks = self.myDetector.detect_landmarks(image, locationsPyFeatList)
-            
-            ## top, right, bottom, left
-            #landmarks = face_recognition.face_landmarks(image, locations, model=self.modelSize)
-            
-            for face_location, face_landmark in zip(locationsPyFeat, landmarks[0]):
-                #top, right, bottom, left = face_location
-                left, top, right, bottom = face_location 
-                match = 1
-
-                ## This is for visualizing the bounding boxes in real-time, with annotations
-                
-                loc = someDF.loc[(someDF['Frame'] == self.frame_i) & (someDF['FaceRectY'] == top) & (someDF['FaceRectX'] == left)].index[0]
-                someDF.loc[loc, 'Person'] = str(match)
-                
-                temp_df = pd.DataFrame(columns=[f'x{i}' for i in range(68)] + [f'y{i}' for i in range(68)])
-                
-                for j, coords in enumerate(face_landmark):
-                    cordX, cordY = coords
-                    temp_df.at[0, f'x{j}'] = cordX
-                    temp_df.at[0, f'y{j}'] = cordY
-                        
-                cols_to_update = temp_df.columns.intersection(someDF.columns)
-                # Update only the required columns
-                someDF.loc[loc, cols_to_update] = temp_df.loc[0, cols_to_update]
-                
-            self.frame_i += 1
-            
         self.video.release()
         return someDF

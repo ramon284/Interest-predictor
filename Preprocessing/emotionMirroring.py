@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 
-
 class emotionMirroring:
             
     def calculate_mirroring(self, emotions):
