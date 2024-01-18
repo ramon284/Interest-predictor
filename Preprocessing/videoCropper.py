@@ -2,7 +2,6 @@ import cv2
 import os
 import subprocess
 
-
 class videoCropper:
     def __init__(self, df, videoFileName, displayVideo, saveCSV=True):
         self.df = df.copy(deep=True)
@@ -14,12 +13,12 @@ class videoCropper:
         input_video_size = int((os.path.getsize(self.path + self.videoFileName) * 8) * 1.1)  # Convert to bits
 
     # Get the total duration of the video in seconds
-        video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)) / int(self.cap.get(cv2.CAP_PROP_FPS))
+        self.video_duration = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT)) / int(self.cap.get(cv2.CAP_PROP_FPS))
 
         # Calculate the input video bitrate
-        self.input_bitrate = int(input_video_size / video_duration)
+        self.input_bitrate = int(input_video_size / self.video_duration)
         print(f'input_bitrate: {self.input_bitrate}')
-        print(f'video_duration: {video_duration}')
+        print(f'video_duration: {self.video_duration}')
         print(f'input_video_size: {input_video_size}')
         print(f'framerate: {self.cap.get(cv2.CAP_PROP_FPS)}')
                 
@@ -91,6 +90,4 @@ class videoCropper:
         self.createCroppedVideo()
         if self.saveCSV:
             self.saveNewCsv()
-        return self.df
-        
-        
+        return self.df, self.fps, self.self.video_duration

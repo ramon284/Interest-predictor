@@ -71,8 +71,3 @@ class personPersistenceManual:
                 df.loc[person_rows.index.difference([best_index]), 'Person'] = 'x'
 
         return df
-
-# Example usage
-# df = pd.read_csv('your_dataframe.csv')
-# ppm = personPersistenceManual()
-# df_assigned = ppm.assign_person_id(df)

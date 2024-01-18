@@ -75,10 +75,6 @@ class face_detector:
                         batch_frames_processed = list(executor.map(self.parallel_preprocess, batch_frames))
                         batch_imgs = [img for _, img in batch_frames_processed]
                         preds = self.model(batch_imgs, batch=batch)
-                        
-                        #batch_imgs = [img.to(self.device) for _, img in batch_frames]
-                        #batch_imgs = [img for _, img in batch_frames]
-                        #preds = self.model(batch_imgs)
 
                         for (frame_num, _), (boxes, poses) in zip(batch_frames, zip(preds[0], preds[1])):
                             if len(boxes) == 0:
@@ -99,13 +95,6 @@ class face_detector:
                                     Yaw = poses[i][2]
                                     if(left < 0 or right > self.frame_width or top < 0 or bottom > self.frame_height):
                                         continue
-                                    # self.faceData = pd.concat([self.faceData, 
-                                    #             pd.DataFrame({'Frame': frame_num,  'FaceRectX': int(left), 'FaceRectY': int(top), 
-                                    #                         'FaceRectWidth': int(right - left), 'FaceRectHeight': int(bottom - top),
-                                    #                         'Pitch': round(Pitch, 3), 'Roll': round(Roll, 3), 'Yaw': round(Yaw, 3)}, 
-                                    #                         index=[0])], 
-                                    #             ignore_index=True)
-                                    ## might make it smaller.
                                     self.faceData = pd.concat([self.faceData, 
                                                 pd.DataFrame({'Frame': frame_num,  'FaceRectX': left, 'FaceRectY': top, 
                                                             'FaceRectWidth': right - left, 'FaceRectHeight': bottom - top,
