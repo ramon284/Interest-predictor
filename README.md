@@ -1,2 +1,1 @@
-# AccentureApplicatie
- -
+This project contains most of the code used to build a model that predicts interest levels of online meeting participants based on their facial expressions, by using computer vision. Certain files and scripts have been omitted due to privacy reasons.
